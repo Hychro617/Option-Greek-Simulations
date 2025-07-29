@@ -2,6 +2,10 @@ import pandas as pd
 import yfinance as yf
 import numpy as np
 import datetime
+import seaborn as sns
+import matplotlib.pyplot as plt
+from greeks import Greeks
+
 
 def options_chain(ticker):
     data = yf.Ticker(ticker)
@@ -35,4 +39,11 @@ def options_chain(ticker):
 
     return options
 
-print(options_chain('MSFT'))
+def risk_free_rate():
+    shy = yf.Ticker('SHY')
+    # 'yield' is typically the dividend yield of the ETF as a decimal (e.g., 0.015 = 1.5%)
+    rate = shy.info.get('yield', None)
+    if rate is None:
+        raise ValueError("Yield data not available from SHY ticker")
+    return rate
+

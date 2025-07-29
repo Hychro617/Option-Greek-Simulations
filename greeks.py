@@ -1,7 +1,8 @@
 import numpy as np
 from scipy.stats import norm
 import matplotlib.pyplot as plt
-
+import pandas as pd
+import data as dt
 
 class Greeks:
     def __init__(self, S, T, K, r, sigma):
@@ -179,6 +180,3 @@ class Greeks:
             'vanna': self.vanna(),
             'charm': self.charm(),
         }
-
-
- 

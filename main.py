@@ -36,11 +36,15 @@ class OptionAnalysis:
 
         self.greeks_df = pd.DataFrame(results)
         print('Current spot price is %f' % self.spot)
-        return self.greeks_df 
+        return self.greeks_df
+    
+    def current_price(self):
+        price = int(self.spot)
+        return price
     
     def closest_strike(self, num_strikes=5):
         strikes = self.options['strike'].unique()
-        differences = {}
+        differences = {}   
 
         for strike in strikes:
             differences[strike] = abs(strike - self.spot)
@@ -57,14 +61,41 @@ class OptionAnalysis:
         
         return filtered_df_calls.sort_values(by=['strike', 'dte']), filtered_df_puts.sort_values(by=['strike', 'dte'])
     
+    def dte_pick(self, num_dte=3):
+        dtes = self.options['dte'].unique()
+        # Convert 90, 180, 270 days into year fractions
+        targets = [90/365, 180/365, 270/365]
+
+        # Find closest DTE for each target
+        closest = {target: min(dtes, key=lambda x: abs(x - target)) for target in targets}
+
+        # Get the list of closest values
+        closest_dtes = list(closest.values())
+
+        # Filter the Greeks DataFrame
+        filtered_df_calls = self.greeks_df[
+            (self.greeks_df['dte'].isin(closest_dtes)) & (self.greeks_df['Call'] == True)
+        ].copy()
+
+        filtered_df_puts = self.greeks_df[
+            (self.greeks_df['dte'].isin(closest_dtes)) & (self.greeks_df['Call'] == False)
+        ].copy()
+
+        return filtered_df_calls.sort_values(by=['dte', 'strike']), filtered_df_puts.sort_values(by=['dte', 'strike'])
+
+
+    
 if __name__ == "__main__":
-    analysis = OptionAnalysis("SPY")
+    ticker = 'SPY'
+    analysis = OptionAnalysis(ticker)
     df = analysis.calculate_greeks()
     print(df.head())
     calls_df, puts_df = analysis.closest_strike(5)
     greek_columns = df.columns[:8]
+    calls_dte, puts_dte = analysis.dte_pick(3)
+    spot = analysis.current_price()
 
     for greek in greek_columns:
-        plot.plot_greek(calls_df,greek)
-        plot.plot_greek(puts_df,greek)
-    
+        #plot.plot_greek_DTE(calls_df,greek)
+        plot.plot_greek_vs_strike(calls_dte,greek, spot)
+

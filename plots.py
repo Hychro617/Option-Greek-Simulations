@@ -4,6 +4,16 @@ import pandas as pd
 
 
 def plot_greek_DTE(df, greek):
+    """
+    Plot a Greek value against Days Till Expiry (DTE) for different strike prices.
+
+    Args:
+        df (pd.DataFrame): DataFrame containing columns 'strike', 'dte', and Greek values.
+        greek (str): The Greek to plot, e.g. 'delta', 'gamma', 'vega', etc.
+
+    Returns:
+        None. Displays matplotlib plot.
+    """
     strikes = df['strike'].unique()
     
     plt.figure(figsize=(10, 6))

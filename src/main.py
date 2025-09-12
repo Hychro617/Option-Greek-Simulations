@@ -4,6 +4,7 @@ import yfinance as yf
 import pandas as pd
 import plots as plot
 
+
 class OptionAnalysis:
     def __init__(self, ticker):
         self.ticker = ticker

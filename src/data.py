@@ -1,6 +1,8 @@
 import pandas as pd
 import yfinance as yf
 import datetime
+import math 
+
 
 
 def options_chain(ticker: str) -> pd.DataFrame:
@@ -44,3 +46,58 @@ def risk_free_rate():
         raise ValueError("Yield data not available from SHY ticker")
     return rate
 
+def forward_price(ticker: str, T: float, q: float = 0.0) -> float:
+    """
+    Calculate forward price F = S * exp((r - q) * T)
+
+    Parameters
+    ----------
+    ticker : str
+        Yahoo Finance ticker symbol.
+    T : float
+        Time to expiration in years.
+    q : float, optional
+        Dividend yield, default is 0.
+
+    Returns
+    -------
+    F : float
+        Forward price
+    """
+    data = yf.Ticker(ticker)
+    spot = data.history(period='1d')['Close'].iloc[-1]
+    r = risk_free_rate()
+    F = spot * math.exp((r - q) * T)
+    return F
+
+
+if __name__ == '__main__':
+    ticker = "AAPL"
+
+    # Get options data
+    options = options_chain(ticker)
+
+    # List available expirations
+    expirations = options['expirationDate'].unique()
+    print("Available expirations:")
+    for i, exp in enumerate(expirations):
+        print(f"{i}: {exp.date()}")
+
+    # Ask user to pick an expiration by index
+    while True:
+        try:
+            idx = int(input("Select expiration by index: "))
+            selected_exp = expirations[idx]
+            break
+        except (IndexError, ValueError):
+            print("Invalid index. Try again.")
+
+    # Filter options for that expiration
+    options_for_exp = options[options['expirationDate'] == selected_exp]
+
+    # Get T (time to expiration) from any row in this expiration
+    T = options_for_exp['dte'].iloc[0]
+
+    # Calculate forward price
+    F = forward_price(ticker, T)
+    print(f"Forward price for expiration {selected_exp.date()}: {F:.2f}")

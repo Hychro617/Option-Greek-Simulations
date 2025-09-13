@@ -1,45 +1,13 @@
-import numpy as np
+
 from scipy.stats import norm
-import matplotlib.pyplot as plt
-import pandas as pd
-import data as dt
-
-class Greeks:
-    def __init__(self, S, T, K, r, sigma):
-        if S <= 0 or K <= 0 or T <= 0 or sigma <= 0:
-            raise ValueError("S, K, T, and sigma must be positive")
-        self.S = S  # Price of spot
-        self.T = T  # dte in years
-        self.K = K  # Strike Price
-        self.r = r  # Risk-free interest rate
-        self.sigma = sigma # Annualised Volatility
-        self._d1 = None
-        self._d2 = None
-    
-    @property
-    def d1(self):
-        if self._d1 is None:
-            self._d1 = (np.log(self.S / self.K) + (self.r + 0.5 * self.sigma**2) * self.T) / (self.sigma * np.sqrt(self.T))
-        return self._d1
-
-    @property
-    def d2(self):
-        if self._d2 is None:
-            self._d2 = self.d1 - self.sigma * np.sqrt(self.T)
-        return self._d2
+from black_scholes import BlackScholes
+import numpy as np
+class Greeks(BlackScholes):
 
     @property
     def pdf_d1(self):
         return norm.pdf(self.d1)
     
-    def black_scholes(self):
-        # Check if d2 and d1 have been calculated
-        # Calculate Black Scholes Option Pricing for both calls and puts 
-        call = self.S * norm.cdf(self.d1) - self.K * np.exp(-self.r * self.T) * norm.cdf(self.d2)
-        put = -self.S * norm.cdf(-self.d1) + self.K * np.exp(-self.r * self.T) * norm.cdf(-self.d2)
-
-        return call, put
-        
     def delta(self, option_type='call'):
         """
         Calculate delta for call or put option.
@@ -180,3 +148,38 @@ class Greeks:
             'vanna': self.vanna(),
             'charm': self.charm(),
         }
+
+
+
+"""
+CHECKER
+
+if __name__ == '__main__':
+        # Example option parameters
+    S = 100      # Spot price
+    K = 105      # Strike price
+    T = 0.5      # Time to expiration in years
+    r = 0.03     # Risk-free rate
+    sigma = 0.2  # Volatility
+
+    # Black-Scholes price
+    bs_option = BlackScholes(S, T, K, r, sigma)
+    call_price, put_price = bs_option.price()
+    print(f"Black-Scholes Prices:\nCall: {call_price:.4f}, Put: {put_price:.4f}\n")
+
+    # Greeks calculations
+    option = Greeks(S, T, K, r, sigma)
+
+    print("Primary Greeks (Call):")
+    for name, value in option.primary_greeks('call').items():
+        print(f"{name.capitalize()}: {value:.6f}")
+
+    print("\nPrimary Greeks (Put):")
+    for name, value in option.primary_greeks('put').items():
+        print(f"{name.capitalize()}: {value:.6f}")
+
+    print("\nSecondary Greeks:")
+    for name, value in option.secondary_greeks().items():
+        print(f"{name.capitalize()}: {value:.6f}")
+
+"""

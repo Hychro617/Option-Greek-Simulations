@@ -2,6 +2,7 @@ import pandas as pd
 import yfinance as yf
 import datetime
 import math 
+import numpy as np
 
 
 
@@ -69,6 +70,17 @@ def forward_price(ticker: str, T: float, q: float = 0.0) -> float:
     r = risk_free_rate()
     F = spot * math.exp((r - q) * T)
     return F
+
+def moneyness_array(options: pd.DataFrame, F: float ) -> np.ndarray:
+    """
+    Compute moneyness for each option in options_df.
+    
+    Moneyness = log(strike/F)
+    """
+    strikes = options['strike'].values
+    moneyness = np.log(strikes / F)
+    return moneyness
+
 
 
 if __name__ == '__main__':
